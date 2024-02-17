@@ -1,0 +1,9 @@
+@url="http://localhost:5000/api/users"
+
+GET {{url}} HTTP/1.1
+Content-Type: application/json
+
+{
+    "iD": 21,
+    "UsErNaMe": "mr.Brown"
+}
