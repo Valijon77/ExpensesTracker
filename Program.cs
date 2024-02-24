@@ -1,23 +1,21 @@
-using ExpensesTracker.Data;
-using Microsoft.EntityFrameworkCore;
+using ExpensesTracker.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Adding services to the container.
-builder.Services.AddControllers();
-builder.Services.AddDbContext<DataContext>(opts =>
 {
-    opts.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-    opts.EnableSensitiveDataLogging(true);
-});
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+    builder.Services
+        .AddAppServices(builder.Configuration)
+        .AddIdentityServices(builder.Configuration)
+        .AddControllers();
+}
 
 var app = builder.Build();
+{
+    app.UseHttpsRedirection();
 
-// Configure the HTTPS request pipeline.
-app.UseHttpsRedirection();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-// app.UseAuthorization();
-app.MapControllers();
+    app.MapControllers();
+}
 
 app.Run();

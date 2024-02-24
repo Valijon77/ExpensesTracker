@@ -1,60 +1,108 @@
+using System.Security.Cryptography;
+using System.Text;
+using AutoMapper;
 using ExpensesTracker.Data;
+using ExpensesTracker.DTOs;
 using ExpensesTracker.Entities;
+using ExpensesTracker.Extensions;
+using ExpensesTracker.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ExpensesTracker.Controllers;
 
 public class UsersController : BaseApiController
 {
     private readonly DataContext _dataContext;
+    private readonly IMapper _mapper;
+    private readonly ITokenService _tokenService;
 
-    public UsersController(DataContext dataContext)
+    public UsersController(DataContext dataContext, IMapper mapper, ITokenService tokenService)
     {
         _dataContext = dataContext;
+        _mapper = mapper;
+        _tokenService = tokenService;
     }
 
     [HttpPost("register")]
-    public ActionResult RegisterUser(User user)
+    public ActionResult<UserDto> RegisterUser(RegisterDto registerDto)
     {
         // P: Username should be unique
-        var sameUser = _dataContext.Users.FirstOrDefault(u => u.Username == user.Username);
-        if (sameUser is not null)
+        var currentUser = _dataContext.Users.FirstOrDefault(
+            u => u.Username == registerDto.Username!.ToLower()
+        );
+
+        // O: Multi-threading framework feature to test that if username already exists as user types it along the way.
+        if (currentUser is not null)
             return BadRequest("User with specified username already exists");
 
         // P: Password length must be greater or equal to 6
         // O: Use validation features of framework
-        if (user.Password.Length < 6)
+        if (registerDto.Password!.Length < 6)
             return BadRequest("Password should be at least 6 characters");
 
-        _dataContext.Users.Add(user);
+        using var hmac = new HMACSHA512();
+
+        User appUser =
+            new()
+            {
+                Username = registerDto.Username!.ToLower(),
+                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
+                PasswordSalt = hmac.Key,
+            };
+
+        _dataContext.Users.Add(appUser);
 
         if (_dataContext.SaveChanges() > 0)
-            return Ok(user);
+        {
+            return new UserDto
+            {
+                Username = appUser.Username,
+                Token = _tokenService.CreateToken(appUser)
+            };
+        }
 
-        return BadRequest("Problem while saving changes to the database.");  // O: introduce a static list to store list of registered users: enables fast testing
+        return BadRequest("Problem while saving changes to the database."); // O: introduce a static list to store list of registered users: enables fast testing
     }
 
     [HttpPost("login")]
-    public ActionResult LoginUser(User user)
+    public ActionResult<UserDto> LoginUser(LoginDto loginDto)
     {
-        var userDb = _dataContext.Users.SingleOrDefault(u => u.Username == user.Username);
+        var appUser = _dataContext.Users.SingleOrDefault(u => u.Username == loginDto.Username);
 
-        if (userDb is null || userDb.Password != user.Password)
+        if (appUser is null)
+            return Unauthorized("Invalid username");
+
+        var hmac = new HMACSHA512(appUser.PasswordSalt);
+
+        byte[] computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password!));
+
+        for (int i = 0; i < computedHash.Length; ++i)
         {
-            return Unauthorized("Username or password is incorrect");
+            if (computedHash[i] != appUser.PasswordHash[i])
+                return Unauthorized("Invalid password");
         }
 
-        return Ok("You are now authenticated.");
+        return new UserDto
+        {
+            Username = appUser.Username,
+            Token = _tokenService.CreateToken(appUser)
+        };
     }
 
-    [HttpGet("{username}")]
-    public ActionResult<User> GetUserbyUsername(string username)
+    [Authorize]
+    [HttpGet("{username}")] // W: why do even I need this method?
+    public ActionResult<UserInfoDto> GetUserbyUsername(string username)
     {
         // I: does not include related data
-        var user = _dataContext.Users.SingleOrDefault(u => u.Username == username);
+        var user = _dataContext.Users
+            .Include(u => u.Expenses)
+            .SingleOrDefault(u => u.Username == username);
+
         if (user is null)
             return NotFound("User with specified username does not exist");
 
-        return Ok(user);
+        return _mapper.Map<UserInfoDto>(user);
     }
 }
