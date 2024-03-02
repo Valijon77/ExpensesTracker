@@ -4,15 +4,16 @@ using ExpensesTracker.Helpers;
 namespace ExpensesTracker.DTOs;
 
 /// <summary>
-/// Used to receive as an argument for <c>CreateExpenseRecord</c> method.
+/// To receive as an argument for <c>UpdateExpenseRecord</c> method.
 /// </summary>
-public class CreateExpenseDto // O: better if DTOs end with ...Request/...Response
+public class UpdateExpenseDto
 {
-    // [O]: decorate with attributes?
-    // [O]: add custom validators?
-    // W: should I use record types instead of set of properties?
+    [Required]
+    public int ExpenseId { get; set; }
 
-    // W: Is validating here with data annotations good idea? Won't it be better if validation is carried out somewhere else (Fluent Validation)?
+    public DateTime CreatedDate { get; set; }
+    public DateTime LastModifiedDate { get; set; } = DateTime.UtcNow;
+
     [NotZero]
     [Range(0, int.MaxValue, ErrorMessage = "Withdrawal amount should be positive!")]
     public int WithdrawalAmount { get; set; }
@@ -20,7 +21,7 @@ public class CreateExpenseDto // O: better if DTOs end with ...Request/...Respon
     [StringLength(100, ErrorMessage = "Description can't exceed 100 characters.")]
     public string? Description { get; set; }
 
-    [Available(CategoryOrPaymentMethod = nameof(Category))] // O: Test if it works correctly
+    [Available(CategoryOrPaymentMethod = nameof(Category))]
     public required string Category { get; set; }
 
     [Available(CategoryOrPaymentMethod = nameof(PaymentMethod))]

@@ -17,23 +17,26 @@ namespace ExpensesTracker.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.15");
 
-            modelBuilder.Entity("ExpensesTracker.Entities.Expenses", b =>
+            modelBuilder.Entity("ExpensesTracker.Entities.Expense", b =>
                 {
                     b.Property<int>("ExpenseId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PaymentMethod")
-                        .IsRequired()
+                    b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Type")
+                    b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -47,7 +50,7 @@ namespace ExpensesTracker.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Expenses", (string)null);
+                    b.ToTable("Expenses");
                 });
 
             modelBuilder.Entity("ExpensesTracker.Entities.User", b =>
@@ -55,6 +58,24 @@ namespace ExpensesTracker.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastModifiedDateTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<byte[]>("PasswordHash")
                         .IsRequired()
@@ -70,10 +91,10 @@ namespace ExpensesTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ExpensesTracker.Entities.Expenses", b =>
+            modelBuilder.Entity("ExpensesTracker.Entities.Expense", b =>
                 {
                     b.HasOne("ExpensesTracker.Entities.User", "User")
                         .WithMany("Expenses")

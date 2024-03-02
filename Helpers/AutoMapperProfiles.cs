@@ -8,9 +8,19 @@ public class AutoMapperProfiles : Profile
 {
     public AutoMapperProfiles()
     {
-        CreateMap<ExpenseDto, Expenses>().ReverseMap();
-        CreateMap<CreateExpenseDto, Expenses>();
+        CreateMap<Expense, ExpenseDto>().ReverseMap();
+
+        CreateMap<CreateExpenseDto, Expense>();
+
+        CreateMap<UpdateExpenseDto, Expense>();
+
         CreateMap<User, UserDto>();
-        CreateMap<User, UserInfoDto>();
+
+        CreateMap<User, UserInfoDto>()
+            .ForMember(dest => dest.MemberSince, opt => opt.MapFrom(src => src.CreatedDateTime))
+            .ForMember(
+                dest => dest.ProfileUpdated,
+                opt => opt.MapFrom(src => src.LastModifiedDateTime)
+            );
     }
 }

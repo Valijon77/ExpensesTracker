@@ -9,5 +9,5 @@ public class DataContext : DbContext
         : base(options) { }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<Expenses> Expenses { get; set; }
+    public DbSet<Expense> Expenses { get; set; }
 }

@@ -4,7 +4,6 @@ using AutoMapper;
 using ExpensesTracker.Data;
 using ExpensesTracker.DTOs;
 using ExpensesTracker.Entities;
-using ExpensesTracker.Extensions;
 using ExpensesTracker.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,17 +36,15 @@ public class UsersController : BaseApiController
         if (currentUser is not null)
             return BadRequest("User with specified username already exists");
 
-        // P: Password length must be greater or equal to 6
-        // O: Use validation features of framework
-        if (registerDto.Password!.Length < 6)
-            return BadRequest("Password should be at least 6 characters");
-
         using var hmac = new HMACSHA512();
 
         User appUser =
             new()
             {
                 Username = registerDto.Username!.ToLower(),
+                FullName = registerDto.FullName,
+                Email = registerDto.Email,
+                Country = registerDto.Country,
                 PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
                 PasswordSalt = hmac.Key,
             };
@@ -59,6 +56,8 @@ public class UsersController : BaseApiController
             return new UserDto
             {
                 Username = appUser.Username,
+                FullName = appUser.FullName,
+                Email = appUser.Email,
                 Token = _tokenService.CreateToken(appUser)
             };
         }
@@ -87,6 +86,8 @@ public class UsersController : BaseApiController
         return new UserDto
         {
             Username = appUser.Username,
+            FullName = appUser.FullName,
+            Email = appUser.Email,
             Token = _tokenService.CreateToken(appUser)
         };
     }
@@ -104,5 +105,19 @@ public class UsersController : BaseApiController
             return NotFound("User with specified username does not exist");
 
         return _mapper.Map<UserInfoDto>(user);
+    }
+
+    [HttpDelete("{username}")]  // TODO: Serious refinement is required :)d
+    public ActionResult DeleteUser(string username)
+    {
+        var user = _dataContext.Users.FirstOrDefault(u => u.Username == username);
+        _dataContext.Users.Remove(user!);
+
+        if (_dataContext.SaveChanges() > 0)
+        {
+            return Ok("User was deleted successfully!");
+        }
+
+        return BadRequest("Something went wrong!");
     }
 }

@@ -2,8 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ExpensesTracker.Entities;
+using ExpensesTracker.Helpers;
 using ExpensesTracker.Interfaces;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ExpensesTracker.Services;
@@ -11,10 +12,12 @@ namespace ExpensesTracker.Services;
 public class TokenService : ITokenService
 {
     private readonly SymmetricSecurityKey _key;
+    private readonly JwtSettings _jwtSettings;
 
-    public TokenService(IConfiguration config)
+    public TokenService(IOptions<JwtSettings> settings)
     {
-        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]!));
+        _jwtSettings = settings.Value;
+        _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.TokenKey));
     }
 
     public string CreateToken(User user)

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ExpensesTracker.Data.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240220082801_AddedPasswordHash")]
-    partial class AddedPasswordHash
+    [Migration("20240301064309_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,23 +20,26 @@ namespace ExpensesTracker.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.15");
 
-            modelBuilder.Entity("ExpensesTracker.Entities.Expenses", b =>
+            modelBuilder.Entity("ExpensesTracker.Entities.Expense", b =>
                 {
                     b.Property<int>("ExpenseId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("Date")
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PaymentMethod")
-                        .IsRequired()
+                    b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Type")
+                    b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -59,6 +62,24 @@ namespace ExpensesTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastModifiedDateTime")
+                        .HasColumnType("TEXT");
+
                     b.Property<byte[]>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("BLOB");
@@ -76,7 +97,7 @@ namespace ExpensesTracker.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ExpensesTracker.Entities.Expenses", b =>
+            modelBuilder.Entity("ExpensesTracker.Entities.Expense", b =>
                 {
                     b.HasOne("ExpensesTracker.Entities.User", "User")
                         .WithMany("Expenses")

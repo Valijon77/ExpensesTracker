@@ -23,7 +23,7 @@ public class ExpensesController : BaseApiController
 
     // O: Modify it to fetch only one expense record from database or create such method.
     [HttpGet("history")]
-    public async Task<ActionResult> GetExpensesRecord() // O: [FromQuery] int days (will it be considered pagination?)
+    public async Task<ActionResult> GetExpenseRecords() // O: [FromQuery] int days (will it be considered pagination?)
     {
         var userId = User.GetUserId();
 
@@ -42,7 +42,7 @@ public class ExpensesController : BaseApiController
         var userId = User.GetUserId();
 
         var expenseRecord = _dataContext.Expenses.FirstOrDefault(e => e.ExpenseId == expenseId);
-        bool belongsToUser = expenseRecord?.UserId == userId;
+        bool belongsToUser = expenseRecord?.UserId == userId; // W: what will 'belongsToUser' contain? Null or false? : false
 
         if (expenseRecord is null || !belongsToUser)
         {
@@ -60,15 +60,15 @@ public class ExpensesController : BaseApiController
     }
 
     [HttpPost("create")]
-    public ActionResult CreateExpenseRecord(CreateExpenseDto expenseDto)
+    public ActionResult CreateExpenseRecord(CreateExpenseDto createExpenseDto)
     {
         var userId = User.GetUserId();
 
-        if (expenseDto.WithdrawalAmount <= 0)
+        if (createExpenseDto.WithdrawalAmount <= 0)
             return BadRequest("Expenditure amount must be greater than zero.");
 
-        // TODO: validate the Type and PaymentMethods also.
-        var expenseRecord = _mapper.Map<Expenses>(expenseDto);
+        // [TODO]: validate the Type and PaymentMethods also.
+        var expenseRecord = _mapper.Map<Expense>(createExpenseDto);
         expenseRecord.UserId = userId;
 
         _dataContext.Expenses.Add(expenseRecord);
@@ -82,7 +82,7 @@ public class ExpensesController : BaseApiController
     }
 
     [HttpPut("update")]
-    public ActionResult UpdateExpenseRecord(ExpenseDto updateExpenseDto)
+    public ActionResult UpdateExpenseRecord(UpdateExpenseDto updateExpenseDto)
     {
         var userId = User.GetUserId();
 
