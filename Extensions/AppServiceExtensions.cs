@@ -16,7 +16,7 @@ public static class AppServiceExtensions
         services.AddDbContext<DataContext>(opts =>
         {
             opts.UseSqlite(configuration.GetConnectionString("DefaultConnection"));
-            opts.EnableSensitiveDataLogging(true);
+            opts.EnableSensitiveDataLogging(true); // I: For only developement phase of an application
         });
         services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         services.AddScoped<ITokenService, TokenService>();

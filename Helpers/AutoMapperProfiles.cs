@@ -22,5 +22,7 @@ public class AutoMapperProfiles : Profile
                 dest => dest.ProfileUpdated,
                 opt => opt.MapFrom(src => src.LastModifiedDateTime)
             );
+
+        CreateMap<UserUpdateDto, User>();
     }
 }

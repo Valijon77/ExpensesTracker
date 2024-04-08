@@ -1,15 +1,15 @@
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using ExpensesTracker.Data;
 using ExpensesTracker.DTOs;
 using ExpensesTracker.Entities;
 using ExpensesTracker.Extensions;
-using Microsoft.AspNetCore.Authorization;
+using ExpensesTracker.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExpensesTracker.Controllers;
 
-[Authorize]
 public class ExpensesController : BaseApiController
 {
     private readonly DataContext _dataContext;
@@ -22,18 +22,36 @@ public class ExpensesController : BaseApiController
     }
 
     // O: Modify it to fetch only one expense record from database or create such method.
+
     [HttpGet("history")]
-    public async Task<ActionResult> GetExpenseRecords() // O: [FromQuery] int days (will it be considered pagination?)
+    public async Task<ActionResult<PagedList<ExpenseDto>>> GetExpenseRecords(
+        [FromQuery] ExpenseParams expenseParams
+    )
     {
         var userId = User.GetUserId();
 
-        var expensesHistory = await _dataContext.Expenses
+        var expenseDtosHistoryQuery = _dataContext.Expenses
             .Where(e => e.UserId == userId)
-            .ToListAsync();
+            .ProjectTo<ExpenseDto>(_mapper.ConfigurationProvider)
+            .AsNoTracking()
+            .AsQueryable();
 
-        var expenseDtos = _mapper.Map<IEnumerable<ExpenseDto>>(expensesHistory);
+        var pagedList = await PagedList<ExpenseDto>.CreateAsync(
+            expenseDtosHistoryQuery,
+            expenseParams.PageNumber,
+            expenseParams.PageSize
+        );
 
-        return Ok(expenseDtos);
+        Response.AddPaginationHeader(
+            new PaginationHeader(
+                pagedList.CurrentPage,
+                pagedList.PageSize,
+                pagedList.TotalPages,
+                pagedList.TotalCount
+            )
+        );
+
+        return Ok(pagedList);
     }
 
     [HttpDelete("delete/{expenseId:int}")]
@@ -42,7 +60,7 @@ public class ExpensesController : BaseApiController
         var userId = User.GetUserId();
 
         var expenseRecord = _dataContext.Expenses.FirstOrDefault(e => e.ExpenseId == expenseId);
-        bool belongsToUser = expenseRecord?.UserId == userId; // W: what will 'belongsToUser' contain? Null or false? : false
+        bool belongsToUser = expenseRecord?.UserId == userId; // [W]: what will 'belongsToUser' contain? Null or false? : false
 
         if (expenseRecord is null || !belongsToUser)
         {

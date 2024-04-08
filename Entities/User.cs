@@ -9,7 +9,7 @@ public class User
     public DateTime CreatedDateTime { get; set; } = DateTime.UtcNow;
     public DateTime LastModifiedDateTime { get; set; } = DateTime.UtcNow;
     public required string Username { get; set; }
-    public required byte[] PasswordHash { get; set; } // O1: apply required keyword depending on how instance is created.
+    public required byte[] PasswordHash { get; set; } // O1: apply 'required' keyword depending on how instance is created.
     public required byte[] PasswordSalt { get; set; } // O2: O1
     public List<Expense> Expenses { get; set; } = new();
 }
